@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -78,7 +78,7 @@ jobs:
             echo "ℹ️  No changes to commit"
           else
             git commit -m "Release Helm chart $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin gh-pages
+            git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
             echo "✅ Pushed to gh-pages branch"
           fi
 
