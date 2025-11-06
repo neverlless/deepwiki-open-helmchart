@@ -41,45 +41,48 @@ jobs:
           echo "📦 Chart packaged successfully"
           ls -la deepwiki-*.tgz
 
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
       - name: Create or update index
         run: |
-          cd gh-pages
+          mkdir -p /tmp/helm-repo
+          cd /tmp/helm-repo
           
-          # Initialize index if it doesn't exist
-          if [ ! -f index.yaml ]; then
-            echo "Creating new index.yaml"
-            helm repo index . --url https://neverlless.github.io/deepwiki-open-helmchart/
-          else
+          # Copy chart to temp directory
+          cp /home/runner/work/deepwiki-open-helmchart/deepwiki-open-helmchart/deepwiki-*.tgz . || true
+          
+          # Initialize or update index
+          if [ -f index.yaml ]; then
             echo "Updating existing index.yaml"
             helm repo index . --url https://neverlless.github.io/deepwiki-open-helmchart/ --merge index.yaml
+          else
+            echo "Creating new index.yaml"
+            helm repo index . --url https://neverlless.github.io/deepwiki-open-helmchart/
           fi
           
-          # Copy new chart to gh-pages
-          cp ../deepwiki-*.tgz . || true
-          
-          echo "📋 Repository index updated"
+          echo "📋 Repository index created"
           cat index.yaml
 
-      - name: Commit and push to gh-pages
+      - name: Checkout and update gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd gh-pages
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          # Fetch gh-pages branch
+          git fetch origin gh-pages:gh-pages
+          git checkout gh-pages
           
-          git add .
+          # Copy new files from temp directory
+          cp /tmp/helm-repo/deepwiki-*.tgz . 2>/dev/null || true
+          cp /tmp/helm-repo/index.yaml . 2>/dev/null || true
           
-          if git diff --cached --quiet; then
+          # Commit and push
+          if git diff --quiet HEAD; then
             echo "ℹ️  No changes to commit"
           else
+            git add -A
             git commit -m "Release Helm chart $(date +'%Y-%m-%d %H:%M:%S')"
             git push origin gh-pages
             echo "✅ Pushed to gh-pages branch"
