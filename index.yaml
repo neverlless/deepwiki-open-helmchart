@@ -1,3 +1,14 @@
 apiVersion: v1
-entries: {}
-generated: "2025-11-06T08:59:12.556159246Z"
+entries:
+  deepwiki:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-11-06T09:00:20.375656602Z"
+    description: A Helm chart for DeepWiki
+    digest: 46f9120977258f9df2114a540060854bb519942d05cd4554a0b09904d6f471ac
+    name: deepwiki
+    type: application
+    urls:
+    - https://neverlless.github.io/deepwiki-open-helmchart/deepwiki-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-11-06T09:00:20.37415296Z"
