@@ -70,6 +70,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Clean up working directory
+          git clean -fd
+          git reset --hard HEAD
+          
           # Fetch gh-pages branch
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
