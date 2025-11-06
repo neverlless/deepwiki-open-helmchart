@@ -67,10 +67,13 @@ jobs:
           cat index.yaml
 
       - name: Commit and push to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd gh-pages
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           
           git add .
           
@@ -78,13 +81,6 @@ jobs:
             echo "ℹ️  No changes to commit"
           else
             git commit -m "Release Helm chart $(date +'%Y-%m-%d %H:%M:%S')"
-            git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
+            git push origin gh-pages
             echo "✅ Pushed to gh-pages branch"
           fi
-
-  deploy-pages:
-    needs: lint-and-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
