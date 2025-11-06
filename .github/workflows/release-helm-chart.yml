@@ -1,0 +1,90 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Chart.yaml'
+      - 'values.yaml'
+      - 'templates/**'
+      - '.github/workflows/release-helm-chart.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  lint-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Lint Helm Chart
+        run: |
+          helm lint .
+          echo "✅ Helm chart linting passed"
+
+      - name: Generate Chart Archive
+        run: |
+          helm package .
+          echo "📦 Chart packaged successfully"
+          ls -la deepwiki-*.tgz
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Create or update index
+        run: |
+          cd gh-pages
+          
+          # Initialize index if it doesn't exist
+          if [ ! -f index.yaml ]; then
+            echo "Creating new index.yaml"
+            helm repo index . --url https://neverlless.github.io/deepwiki-open-helmchart/
+          else
+            echo "Updating existing index.yaml"
+            helm repo index . --url https://neverlless.github.io/deepwiki-open-helmchart/ --merge index.yaml
+          fi
+          
+          # Copy new chart to gh-pages
+          cp ../deepwiki-*.tgz . || true
+          
+          echo "📋 Repository index updated"
+          cat index.yaml
+
+      - name: Commit and push to gh-pages
+        run: |
+          cd gh-pages
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add .
+          
+          if git diff --cached --quiet; then
+            echo "ℹ️  No changes to commit"
+          else
+            git commit -m "Release Helm chart $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin gh-pages
+            echo "✅ Pushed to gh-pages branch"
+          fi
+
+  deploy-pages:
+    needs: lint-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2

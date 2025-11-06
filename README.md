@@ -22,7 +22,55 @@ This Helm chart is designed to deploy the DeepWiki-Open project within a Kuberne
 - kubectl configured to communicate with your cluster
 - NGINX Ingress Controller (if using ingress)
 
+### Add Helm Repository
+
+Add this chart repository to your Helm client:
+
+```bash
+helm repo add deepwiki https://neverlless.github.io/deepwiki-open-helmchart/
+helm repo update
+```
+
+Verify the chart is available:
+
+```bash
+helm search repo deepwiki
+```
+
 ### Quick Start
+
+1. **Add the Helm repository:**
+
+```bash
+helm repo add deepwiki https://neverlless.github.io/deepwiki-open-helmchart/
+helm repo update
+```
+
+1. **Install the chart with default values:**
+
+```bash
+helm install deepwiki deepwiki/deepwiki --namespace deepwiki --create-namespace
+```
+
+1. **Install with custom values:**
+
+```bash
+helm install deepwiki deepwiki/deepwiki \
+  --set deepwiki.namespace=my-namespace \
+  --set deepwiki.replicas=2 \
+  --set deepwiki.ingress.frontend.host=deepwiki.yourdomain.com \
+  --set deepwiki.ingress.backend.host=deepwiki-api.yourdomain.com
+```
+
+1. **Install using a custom values file:**
+
+```bash
+helm install deepwiki deepwiki/deepwiki -f my-values.yaml --namespace deepwiki
+```
+
+### Alternative: Clone and Install from Repository
+
+If you prefer to install directly from the repository:
 
 1. **Clone the repository:**
 
@@ -31,26 +79,10 @@ git clone https://github.com/neverlless/deepwiki-open-helmchart.git
 cd deepwiki-open-helmchart
 ```
 
-2. **Install the chart with default values:**
+1. **Install from local chart:**
 
 ```bash
 helm install deepwiki . --namespace deepwiki --create-namespace
-```
-
-3. **Install with custom values:**
-
-```bash
-helm install deepwiki . \
-  --set deepwiki.namespace=my-namespace \
-  --set deepwiki.replicas=2 \
-  --set deepwiki.ingress.frontend.host=deepwiki.yourdomain.com \
-  --set deepwiki.ingress.backend.host=deepwiki-api.yourdomain.com
-```
-
-4. **Install using a custom values file:**
-
-```bash
-helm install deepwiki . -f my-values.yaml
 ```
 
 ### Upgrade an Existing Release
