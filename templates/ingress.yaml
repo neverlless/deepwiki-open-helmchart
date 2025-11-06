@@ -1,0 +1,75 @@
+{{- if .Values.deepwiki.ingress.backend.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress-backend
+  namespace: {{ .Values.deepwiki.namespace }}
+  labels:
+    app.kubernetes.io/name: deepwiki
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- with .Values.deepwiki.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.deepwiki.ingress.backend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.deepwiki.ingress.className }}
+  ingressClassName: {{ .Values.deepwiki.ingress.className }}
+  {{- end }}
+  {{- if .Values.deepwiki.ingress.backend.tls }}
+  tls:
+    {{- toYaml .Values.deepwiki.ingress.backend.tls | nindent 4 }}
+  {{- end }}
+  rules:
+  - host: {{ .Values.deepwiki.ingress.backend.host }}
+    http:
+      paths:
+      - path: {{ .Values.deepwiki.ingress.backend.path | default "/api/v1(/|$)(.*)" }}
+        pathType: {{ .Values.deepwiki.ingress.backend.pathType | default "Prefix" }}
+        backend:
+          service:
+            name: {{ .Values.deepwiki.name }}-service
+            port:
+              name: api
+{{- end }}
+---
+{{- if .Values.deepwiki.ingress.frontend.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress-frontend
+  namespace: {{ .Values.deepwiki.namespace }}
+  labels:
+    app.kubernetes.io/name: deepwiki
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- with .Values.deepwiki.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.deepwiki.ingress.frontend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.deepwiki.ingress.className }}
+  ingressClassName: {{ .Values.deepwiki.ingress.className }}
+  {{- end }}
+  {{- if .Values.deepwiki.ingress.frontend.tls }}
+  tls:
+    {{- toYaml .Values.deepwiki.ingress.frontend.tls | nindent 4 }}
+  {{- end }}
+  rules:
+  - host: {{ .Values.deepwiki.ingress.frontend.host }}
+    http:
+      paths:
+      - path: {{ .Values.deepwiki.ingress.frontend.path | default "/" }}
+        pathType: {{ .Values.deepwiki.ingress.frontend.pathType | default "Prefix" }}
+        backend:
+          service:
+            name: {{ .Values.deepwiki.name }}-service
+            port:
+              name: web
+{{- end }}

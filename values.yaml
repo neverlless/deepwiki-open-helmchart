@@ -1,0 +1,164 @@
+# Application name - used for resource naming
+name: deepwiki
+# Kubernetes namespace for deployment
+namespace: deepwiki
+# Create namespace if it doesn't exist (useful for ArgoCD)
+createNamespace: false
+# Optional namespace annotations
+# namespaceAnnotations:
+#   argocd.argoproj.io/sync-wave: "-1"
+# Number of pod replicas
+replicas: 1
+# Container image configuration
+# Images hosted at https://github.com/AsyncFuncAI/deepwiki-open/pkgs/container/deepwiki-open
+image:
+  repository: ghcr.io/asyncfuncai/deepwiki-open
+  tag: sha-bb3c67d
+  pullPolicy: IfNotPresent
+# Image pull secrets (if using private registry)
+# imagePullSecrets:
+#   - name: regcred
+# Container ports
+ports:
+  web: 3000  # Frontend NextJS app
+  api: 8001  # Backend API
+# Environment variables
+env:
+  - name: OLLAMA_HOST
+    value: http://your-ollama-server:11434
+  # Add more environment variables as needed
+  # - name: ANOTHER_VAR
+  #   value: "value"
+# Load environment from ConfigMap or Secret
+# envFrom:
+#   configMapRef: deepwiki-config
+#   secretRef: deepwiki-secrets
+# Persistent storage configuration
+storage:
+  enabled: true
+  create: true  # Create PVC automatically
+  name: deepwiki-pvc
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  # storageClassName: csi-rbd-sc
+  mountPath: /root/.adalflow
+  # subPath: ""  # Optional subPath within the volume
+  # annotations: {}
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+# Liveness probe - checks if container is alive
+livenessProbe:
+  httpGet:
+    path: /
+    port: web
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+# Readiness probe - checks if container is ready to serve traffic
+readinessProbe:
+  httpGet:
+    path: /
+    port: web
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+# Deployment strategy
+strategy:
+  type: Recreate
+#   type: RollingUpdate
+#   rollingUpdate:
+#     maxSurge: 1
+#     maxUnavailable: 0
+# Pod security context
+# securityContext:
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   fsGroup: 1000
+# Container security context
+# containerSecurityContext:
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop:
+#       - ALL
+# Service configuration
+service:
+  type: ClusterIP
+  # type: NodePort  # Use for NodePort service
+  # nodePortWeb: 30000  # Optional: specify NodePort for web
+  # nodePortApi: 30001  # Optional: specify NodePort for api
+  # sessionAffinity: ClientIP  # Optional: enable session affinity
+# Service annotations
+# serviceAnnotations: {}
+# Ingress configuration
+ingress:
+  className: nginx
+  # Backend API ingress
+  backend:
+    enabled: true
+    host: deepwiki-api.example.com
+    path: /api/v1(/|$)(.*)
+    pathType: ImplementationSpecific
+    # TLS configuration (optional)
+    # tls:
+    #   - secretName: deepwiki-api-tls
+    #     hosts:
+    #       - deepwiki-api.example.com
+    # Custom annotations for backend ingress
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/use-regex: "true"
+  # Frontend ingress
+  frontend:
+    enabled: true
+    host: deepwiki.example.com
+    path: /
+    pathType: Prefix
+    # TLS configuration (optional)
+    # tls:
+    #   - secretName: deepwiki-tls
+    #     hosts:
+    #       - deepwiki.example.com
+    # Custom annotations for frontend ingress
+    # annotations:
+# Common labels for all resources
+# labels:
+#   environment: infra
+#   team: platform
+# Deployment-specific annotations
+# deploymentAnnotations: {}
+# Pod-specific labels
+# podLabels: {}
+# Pod-specific annotations (useful for Prometheus, Linkerd, etc.)
+# podAnnotations:
+#   prometheus.io/scrape: "true"
+#   prometheus.io/port: "8001"
+# Node selector for pod placement
+# nodeSelector:
+#   kubernetes.io/os: linux
+# Affinity rules for pod scheduling
+# affinity:
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#       - weight: 100
+#         podAffinityTerm:
+#           labelSelector:
+#             matchExpressions:
+#               - key: app.kubernetes.io/name
+#                 operator: In
+#                 values:
+#                   - deepwiki
+#           topologyKey: kubernetes.io/hostname
+# Tolerations for node taints
+# tolerations:
+#   - key: "node-role.kubernetes.io/master"
+#     operator: "Exists"
+#     effect: "NoSchedule"

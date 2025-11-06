@@ -1,0 +1,14 @@
+{{- if .Values.deepwiki.createNamespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.deepwiki.namespace }}
+  labels:
+    app.kubernetes.io/name: deepwiki
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with .Values.deepwiki.namespaceAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

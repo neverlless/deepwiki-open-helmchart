@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deepwiki.name }}-service
+  namespace: {{ .Values.deepwiki.namespace }}
+  labels:
+    app.kubernetes.io/name: deepwiki
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- with .Values.deepwiki.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.deepwiki.serviceAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.deepwiki.service.type | default "ClusterIP" }}
+  selector:
+    app.kubernetes.io/name: deepwiki
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+  - name: web
+    port: {{ .Values.deepwiki.ports.web }}
+    targetPort: web
+    protocol: TCP
+    {{- if and (eq .Values.deepwiki.service.type "NodePort") .Values.deepwiki.service.nodePortWeb }}
+    nodePort: {{ .Values.deepwiki.service.nodePortWeb }}
+    {{- end }}
+  - name: api
+    port: {{ .Values.deepwiki.ports.api }}
+    targetPort: api
+    protocol: TCP
+    {{- if and (eq .Values.deepwiki.service.type "NodePort") .Values.deepwiki.service.nodePortApi }}
+    nodePort: {{ .Values.deepwiki.service.nodePortApi }}
+    {{- end }}
+  {{- with .Values.deepwiki.service.sessionAffinity }}
+  sessionAffinity: {{ . }}
+  {{- end }}
